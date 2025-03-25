@@ -3,4 +3,9 @@ project(class_example)
 
 file(GLOB SOURCES "src/*.cc" "include/*.h")
 add_executable(class_example ${SOURCES})
-target_include_directories(class_example PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+target_link_libraries(class_example jsoncpp)
+target_include_directories(class_example PUBLIC 
+    ${CMAKE_SOURCE_DIR}/include
+    /usr/include/jsoncpp    
+)
