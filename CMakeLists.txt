@@ -9,3 +9,25 @@ target_include_directories(class_example PUBLIC
     ${CMAKE_SOURCE_DIR}/include
     /usr/include/jsoncpp    
 )
+
+enable_testing()
+find_package(GTest REQUIRED)
+include(GoogleTest)
+
+add_executable(message_test tests/message_test.cc
+    src/request_message.cc
+    src/response_message.cc
+)
+
+target_include_directories(message_test PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    /usr/include/jsoncpp
+)
+
+target_link_libraries(message_test
+    jsoncpp
+    GTest::GTest
+    GTest::Main
+)
+
+gtest_discover_tests(message_test)
