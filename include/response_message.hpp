@@ -11,4 +11,12 @@ class ResponseMessage {
 
     static ResponseMessage fromJson(const Json::Value& json);
     Json::Value toJson() const;
+
+    bool operator==(const ResponseMessage& other) const {
+        return success == other.success && message == other.message;
+    }
+
+    bool operator!=(const ResponseMessage& other) const {
+        return !(*this == other);
+    }
 };

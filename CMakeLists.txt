@@ -14,7 +14,8 @@ enable_testing()
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
-add_executable(message_test tests/message_test.cc
+add_executable(message_test
+    tests/message_test.cc
     src/request_message.cc
     src/response_message.cc
 )

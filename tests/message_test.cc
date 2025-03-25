@@ -6,36 +6,73 @@
 #include "request_message.hpp"
 #include "response_message.hpp"
 
-TEST(RequestMessageTest, SerializeToJsonString) {
-    RequestMessage req;
-    req.command = "start";
-    req.id = 123;
+// Helper: JSON 문자열 → Json::Value
+Json::Value parseJsonString(const std::string& jsonStr) {
+    Json::Value root;
+    Json::CharReaderBuilder reader;
+    std::string errs;
+    std::istringstream iss(jsonStr);
 
-    Json::Value json = req.toJson();
+    if (!Json::parseFromStream(reader, iss, &root, &errs)) {
+        throw std::runtime_error("JSON parse error: " + errs);
+    }
 
-    Json::StreamWriterBuilder writer;
-    std::string jsonStr = Json::writeString(writer, json);
-
-    // 예상되는 JSON 문자열 일부 포함 여부 확인
-    EXPECT_NE(jsonStr.find("\"command\" : \"start\""), std::string::npos);
-    EXPECT_NE(jsonStr.find("\"id\" : 123"), std::string::npos);
+    return root;
 }
 
+// 1. RequestMessage serialize
+TEST(RequestMessageTest, SerializeToJsonString) {
+    RequestMessage req;
+    req.command = "launch";
+    req.id = 10;
+
+    Json::Value json = req.toJson();
+    std::string jsonStr = Json::writeString(Json::StreamWriterBuilder(), json);
+
+    EXPECT_NE(jsonStr.find("\"command\" : \"launch\""), std::string::npos);
+    EXPECT_NE(jsonStr.find("\"id\" : 10"), std::string::npos);
+}
+
+// 2. ResponseMessage deserialize
 TEST(ResponseMessageTest, DeserializeFromJsonString) {
-    std::string inputStr = R"({
+    std::string input = R"({
         "success": true,
-        "message": "Task completed"
+        "message": "Operation done"
     })";
 
-    Json::CharReaderBuilder reader;
-    Json::Value json;
-    std::string errs;
-    std::istringstream iss(inputStr);
+    Json::Value json = parseJsonString(input);
+    ResponseMessage expected{true, "Operation done"};
+    ResponseMessage actual = ResponseMessage::fromJson(json);
 
-    ASSERT_TRUE(Json::parseFromStream(reader, iss, &json, &errs));
+    EXPECT_EQ(actual, expected);
+}
 
-    ResponseMessage res = ResponseMessage::fromJson(json);
+// 3. RequestMessage operator==
+TEST(RequestMessageTest, EqualityOperatorWorks) {
+    RequestMessage a{"run", 42};
+    RequestMessage b{"run", 42};
+    RequestMessage c{"stop", 42};
 
-    EXPECT_TRUE(res.success);
-    EXPECT_EQ(res.message, "Task completed");
+    EXPECT_EQ(a, b);
+    EXPECT_NE(a, c);
+}
+
+// 4. 잘못된 JSON → 예외 발생 테스트
+TEST(ResponseMessageTest, MalformedJsonThrows) {
+    std::string badJson = R"({
+        "success": tru,  // 오타 intentional
+        "message": "oops"
+    })";
+
+    EXPECT_THROW(
+        {
+            try {
+                Json::Value json = parseJsonString(badJson);
+                ResponseMessage::fromJson(json);
+            } catch (const std::exception& e) {
+                std::cerr << "Caught exception: " << e.what() << std::endl;
+                throw;
+            }
+        },
+        std::exception);
 }

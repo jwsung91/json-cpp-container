@@ -11,4 +11,12 @@ class RequestMessage {
 
     static RequestMessage fromJson(const Json::Value& json);
     Json::Value toJson() const;
+
+    bool operator==(const RequestMessage& other) const {
+        return command == other.command && id == other.id;
+    }
+
+    bool operator!=(const RequestMessage& other) const {
+        return !(*this == other);
+    }
 };
